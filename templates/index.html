@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎭 SentimentRNN: Interactive RNN Sentiment Analyzer</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="glass-bg-blobs">
+        <div class="blob blob-purple"></div>
+        <div class="blob blob-blue"></div>
+    </div>
+
+    <main class="app-container">
+        <header class="app-header">
+            <h1 id="app-title">🎭 SentimentRNN</h1>
+            <p class="subtitle">An Interactive Deep Learning Sandbox comparing Simple RNNs, LSTMs, and GRUs</p>
+        </header>
+
+        <section class="main-workspace">
+            <!-- Left Panel: Text Input & Preprocessing -->
+            <div class="input-panel glass-card">
+                <h2>📝 Analyze Custom Review</h2>
+                <p class="card-desc">Type any sentence to see how different RNN architectures classify its sentiment.</p>
+                
+                <div class="textarea-container">
+                    <textarea id="review-input" placeholder="Type a sentence here... E.g., 'I loved this movie, it was absolutely wonderful!'" maxlength="150"></textarea>
+                    <div class="char-counter"><span id="char-count">0</span> / 150</div>
+                </div>
+
+                <div class="controls-row">
+                    <button id="btn-analyze" class="btn btn-primary">
+                        <span id="btn-text">Analyze Sentiment</span>
+                        <span id="btn-spinner" class="spinner hidden"></span>
+                    </button>
+                    <button id="btn-clear" class="btn btn-secondary">Clear</button>
+                </div>
+
+                <!-- Live Pipeline Visualization -->
+                <div class="pipeline-section">
+                    <h3>⚙️ Tokenization & Padding Pipeline</h3>
+                    <p class="section-desc">Words are converted to vocabulary indices and padded to match model input shape <code>(batch, max_len)</code>.</p>
+                    <div id="pipeline-tokens" class="tokens-container">
+                        <div class="no-tokens-message">Tokens will appear here after analysis.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Predictions Comparison -->
+            <div class="results-panel">
+                <div class="results-header">
+                    <h2>📊 Comparative Model Predictions</h2>
+                    <p class="header-desc">Inference probabilities (0 = Negative sentiment, 1 = Positive sentiment)</p>
+                </div>
+
+                <div class="models-grid">
+                    <!-- Model Card: Simple RNN No Embedding -->
+                    <div class="model-card glass-card" id="card-no-embedding">
+                        <div class="card-header">
+                            <span class="model-badge badge-warning">No Embedding</span>
+                            <h3>Simple RNN</h3>
+                        </div>
+                        <div class="sentiment-result">
+                            <span id="val-no-embedding-label" class="sentiment-label label-pending">Pending</span>
+                            <span id="val-no-embedding-prob" class="probability-label">0.00</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div id="bar-no-embedding" class="progress-bar" style="width: 50%;"></div>
+                        </div>
+                        <p class="model-explanation">
+                            <strong>Why it struggles:</strong> Trains directly on raw token index numbers as values. No semantic embedding vector space is learned, resulting in ~51% accuracy (equivalent to guessing).
+                        </p>
+                    </div>
+
+                    <!-- Model Card: Simple RNN With Embedding -->
+                    <div class="model-card glass-card" id="card-with-embedding">
+                        <div class="card-header">
+                            <span class="model-badge badge-success">Learnable Embedding</span>
+                            <h3>Simple RNN</h3>
+                        </div>
+                        <div class="sentiment-result">
+                            <span id="val-with-embedding-label" class="sentiment-label label-pending">Pending</span>
+                            <span id="val-with-embedding-prob" class="probability-label">0.00</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div id="bar-with-embedding" class="progress-bar" style="width: 50%;"></div>
+                        </div>
+                        <p class="model-explanation">
+                            <strong>How it performs:</strong> Maps tokens to an 8-dimensional learnable continuous space. Achieves 99% training accuracy but can suffer from padding signal decay due to simple recurrent feedback.
+                        </p>
+                    </div>
+
+                    <!-- Model Card: LSTM -->
+                    <div class="model-card glass-card" id="card-lstm">
+                        <div class="card-header">
+                            <span class="model-badge badge-premium">LSTM</span>
+                            <h3>Long Short-Term Memory</h3>
+                        </div>
+                        <div class="sentiment-result">
+                            <span id="val-lstm-label" class="sentiment-label label-pending">Pending</span>
+                            <span id="val-lstm-prob" class="probability-label">0.00</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div id="bar-lstm" class="progress-bar" style="width: 50%;"></div>
+                        </div>
+                        <p class="model-explanation">
+                            <strong>Why it shines:</strong> Uses cell states and gates (forget, input, output) to maintain sequence history. Retains details perfectly across sequences.
+                        </p>
+                    </div>
+
+                    <!-- Model Card: GRU -->
+                    <div class="model-card glass-card" id="card-gru">
+                        <div class="card-header">
+                            <span class="model-badge badge-premium">GRU</span>
+                            <h3>Gated Recurrent Unit</h3>
+                        </div>
+                        <div class="sentiment-result">
+                            <span id="val-gru-label" class="sentiment-label label-pending">Pending</span>
+                            <span id="val-gru-prob" class="probability-label">0.00</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div id="bar-gru" class="progress-bar" style="width: 50%;"></div>
+                        </div>
+                        <p class="model-explanation">
+                            <strong>How it compares:</strong> A streamlined version of LSTM with fewer gates (reset, update). Highly efficient and achieves comparable 100% accuracy on sentiment patterns.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Technical Specification Section -->
+        <section class="tech-spec-section glass-card">
+            <h2>🔬 Project Specifications & Architecture Design</h2>
+            <div class="specs-grid">
+                <div class="spec-table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Metric / Feature</th>
+                                <th>Simple RNN (Raw)</th>
+                                <th>Simple RNN (Emb)</th>
+                                <th>LSTM Model</th>
+                                <th>GRU Model</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Embedding Layer</strong></td>
+                                <td>None (1D Scale)</td>
+                                <td>Keras Embedding (16D)</td>
+                                <td>Keras Embedding (16D)</td>
+                                <td>Keras Embedding (16D)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Recurrent Units</strong></td>
+                                <td>16 Units</td>
+                                <td>16 Units</td>
+                                <td>16 Units</td>
+                                <td>16 Units</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Parameters</strong></td>
+                                <td>~300</td>
+                                <td>~4,000</td>
+                                <td>~6,000</td>
+                                <td>~5,200</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Training Accuracy</strong></td>
+                                <td class="text-error">51.00%</td>
+                                <td class="text-success">99.00%</td>
+                                <td class="text-success" style="font-weight: 700;">100.00%</td>
+                                <td class="text-success" style="font-weight: 700;">100.00%</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Sequence Padding</strong></td>
+                                <td>Pre-padding (7)</td>
+                                <td>Pre-padding (7)</td>
+                                <td>Pre-padding (7)</td>
+                                <td>Pre-padding (7)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Client Side Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const reviewInput = document.getElementById('review-input');
+            const charCount = document.getElementById('char-count');
+            const btnAnalyze = document.getElementById('btn-analyze');
+            const btnClear = document.getElementById('btn-clear');
+            const btnText = document.getElementById('btn-text');
+            const btnSpinner = document.getElementById('btn-spinner');
+            const pipelineTokens = document.getElementById('pipeline-tokens');
+
+            const modelKeys = ['no_embedding', 'with_embedding', 'lstm', 'gru'];
+
+            // Character counting
+            reviewInput.addEventListener('input', () => {
+                charCount.textContent = reviewInput.value.length;
+            });
+
+            // Analyze button click handler
+            btnAnalyze.addEventListener('click', async () => {
+                const text = reviewInput.value.trim();
+                if (!text) {
+                    alert('Please enter some text to analyze!');
+                    return;
+                }
+
+                // Show spinner, disable buttons
+                btnAnalyze.disabled = true;
+                btnClear.disabled = true;
+                btnSpinner.classList.remove('hidden');
+                btnText.textContent = 'Analyzing...';
+
+                try {
+                    const response = await fetch('/predict', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ text })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Server returned an error');
+                    }
+
+                    const data = await response.json();
+                    updateUI(data);
+
+                } catch (error) {
+                    console.error('Error analyzing sentiment:', error);
+                    alert('Error: Could not retrieve predictions from Flask server.');
+                } finally {
+                    btnAnalyze.disabled = false;
+                    btnClear.disabled = false;
+                    btnSpinner.classList.add('hidden');
+                    btnText.textContent = 'Analyze Sentiment';
+                }
+            });
+
+            // Clear button handler
+            btnClear.addEventListener('click', () => {
+                reviewInput.value = '';
+                charCount.textContent = '0';
+                resetUI();
+            });
+
+            // Update UI with model outputs and token pipeline mapping
+            function updateUI(data) {
+                // Update Pipeline Tokens
+                pipelineTokens.innerHTML = '';
+                data.tokens_mapping.forEach(item => {
+                    const tokenBadge = document.createElement('div');
+                    tokenBadge.className = 'token-badge';
+                    if (item.token === '<PAD>') {
+                        tokenBadge.classList.add('token-pad');
+                    } else if (item.index === 1) {
+                        tokenBadge.classList.add('token-oov');
+                    } else {
+                        tokenBadge.classList.add('token-word');
+                    }
+
+                    tokenBadge.innerHTML = `
+                        <span class="token-word-text">${escapeHTML(item.token)}</span>
+                        <span class="token-index-num">${item.index}</span>
+                    `;
+                    pipelineTokens.appendChild(tokenBadge);
+                });
+
+                // Update predictions
+                modelKeys.forEach(key => {
+                    const pred = data.predictions[key];
+                    const labelSpan = document.getElementById(`val-${key}-label`);
+                    const probSpan = document.getElementById(`val-${key}-prob`);
+                    const progressBar = document.getElementById(`bar-${key}`);
+                    const card = document.getElementById(`card-${key}`);
+
+                    // Clean previous classes
+                    labelSpan.className = 'sentiment-label';
+                    card.className = 'model-card glass-card';
+
+                    // Update label and badge
+                    labelSpan.textContent = pred.sentiment;
+                    if (pred.sentiment === 'Positive') {
+                        labelSpan.classList.add('label-positive');
+                        card.classList.add('sentiment-positive');
+                    } else {
+                        labelSpan.classList.add('label-negative');
+                        card.classList.add('sentiment-negative');
+                    }
+
+                    // Update Probability & Progress Bar
+                    probSpan.textContent = pred.probability.toFixed(3);
+                    const percentage = (pred.probability * 100).toFixed(1);
+                    progressBar.style.width = `${percentage}%`;
+                    
+                    // Accent colored progress bar
+                    if (pred.sentiment === 'Positive') {
+                        progressBar.style.backgroundColor = '#10b981'; // green
+                    } else {
+                        progressBar.style.backgroundColor = '#ef4444'; // red
+                    }
+                });
+            }
+
+            // Reset dashboard values
+            function resetUI() {
+                pipelineTokens.innerHTML = '<div class="no-tokens-message">Tokens will appear here after analysis.</div>';
+                
+                modelKeys.forEach(key => {
+                    const labelSpan = document.getElementById(`val-${key}-label`);
+                    const probSpan = document.getElementById(`val-${key}-prob`);
+                    const progressBar = document.getElementById(`bar-${key}`);
+                    const card = document.getElementById(`card-${key}`);
+
+                    labelSpan.className = 'sentiment-label label-pending';
+                    labelSpan.textContent = 'Pending';
+                    probSpan.textContent = '0.00';
+                    progressBar.style.width = '50%';
+                    progressBar.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                    card.className = 'model-card glass-card';
+                });
+            }
+
+            function escapeHTML(str) {
+                return str.replace(/[&<>'"]/g, 
+                    tag => ({
+                        '&': '&amp;',
+                        '<': '&lt;',
+                        '>': '&gt;',
+                        "'": '&#39;',
+                        '"': '&quot;'
+                    }[tag] || tag)
+                );
+            }
+        });
+    </script>
+</body>
+</html>
