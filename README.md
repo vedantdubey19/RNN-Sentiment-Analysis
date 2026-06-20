@@ -45,6 +45,16 @@ flowchart TD
 
 ---
 
+## 📸 Dashboard Screenshots
+
+### 1. Interactive Sentiment Tester & Tokenizer Pipeline
+![Dashboard Interface](images/dashboard_main.png)
+
+### 2. Architecture Specifications & Metrics
+![Specifications Table](images/dashboard_specs.png)
+
+---
+
 ## 🛠️ Setup & Usage
 
 ### 1. Install Dependencies
