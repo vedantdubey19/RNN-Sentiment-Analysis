@@ -28,7 +28,7 @@ flowchart TD
     F -->|Gated Gates| J["⚡ GRU Model (With Embedding)"]
     
     G & H & I & J --> K["🎯 Dense Output Layer (Sigmoid)"]
-    K -->|Probs [0.0 - 1.0]| L["📊 Live Web Dashboard UI"]
+    K -->|Probs 0.0 - 1.0| L["📊 Live Web Dashboard UI"]
 ```
 
 ---
