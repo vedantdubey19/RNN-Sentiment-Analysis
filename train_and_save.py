@@ -138,8 +138,8 @@ loss_gru, acc_gru = model_gru.evaluate(padded, labels, verbose=0)
 print(f"Model 4 (GRU) Training Accuracy: {acc_gru * 100:.2f}%")
 
 # Save all models
-model_no_embedding.save("models/model_no_embedding.keras")
-model_with_embedding.save("models/model_with_embedding.keras")
-model_lstm.save("models/model_lstm.keras")
-model_gru.save("models/model_gru.keras")
+model_no_embedding.save("models/model_no_embedding.h5")
+model_with_embedding.save("models/model_with_embedding.h5")
+model_lstm.save("models/model_lstm.h5")
+model_gru.save("models/model_gru.h5")
 print("\nAll models and configuration files saved successfully in 'models/' directory!")

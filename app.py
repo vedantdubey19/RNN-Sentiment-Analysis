@@ -9,10 +9,10 @@ app = Flask(__name__)
 
 # Paths
 MODELS_DIR = "models"
-NO_EMB_PATH = os.path.join(MODELS_DIR, "model_no_embedding.keras")
-WITH_EMB_PATH = os.path.join(MODELS_DIR, "model_with_embedding.keras")
-LSTM_PATH = os.path.join(MODELS_DIR, "model_lstm.keras")
-GRU_PATH = os.path.join(MODELS_DIR, "model_gru.keras")
+NO_EMB_PATH = os.path.join(MODELS_DIR, "model_no_embedding.h5")
+WITH_EMB_PATH = os.path.join(MODELS_DIR, "model_with_embedding.h5")
+LSTM_PATH = os.path.join(MODELS_DIR, "model_lstm.h5")
+GRU_PATH = os.path.join(MODELS_DIR, "model_gru.h5")
 VOCAB_PATH = os.path.join(MODELS_DIR, "tokenizer_vocab.json")
 METADATA_PATH = os.path.join(MODELS_DIR, "metadata.json")
 
